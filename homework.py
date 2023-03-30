@@ -1,11 +1,14 @@
-...
+from dotenv import load_dotenv
+import telegram 
+import os
+import time
 
 load_dotenv()
 
 
-PRACTICUM_TOKEN = ...
-TELEGRAM_TOKEN = ...
-TELEGRAM_CHAT_ID = ...
+PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 RETRY_PERIOD = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
@@ -20,31 +23,58 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    ...
+    """
+    Проверяет доступность переменных окружения,
+    которые необходимы для работы программы. 
+    Если отсутствует хотя бы одна переменная окружения — 
+    продолжать работу бота нет смысла.
+    """
 
 
 def send_message(bot, message):
-    ...
+    """
+    Отправляет сообщение в Telegram чат,
+    определяемый переменной окружения TELEGRAM_CHAT_ID. 
+    Принимает на вход два параметра: экземпляр класса Bot и строку с текстом сообщения.
+    """
 
 
 def get_api_answer(timestamp):
-    ...
+    """
+    Делает запрос к единственному эндпоинту API-сервиса. 
+    В качестве параметра в функцию передается временная метка.
+    В случае успешного запроса должна вернуть ответ API,
+    приведя его из формата JSON к типам данных Python.
+    """
 
 
 def check_response(response):
-    ...
+    """
+    проверяет ответ API на соответствие документации. 
+    В качестве параметра функция получает ответ API, 
+    приведенный к типам данных Python.
+    """
 
 
 def parse_status(homework):
-    ...
-
+    """
+    извлекает из информации о конкретной домашней 
+    работе статус этой работы. В качестве параметра функция 
+    получает только один элемент из списка домашних работ. 
+    В случае успеха, функция возвращает подготовленную 
+    для отправки в Telegram строку, содержащую один из 
+    вердиктов словаря HOMEWORK_VERDICTS.
+    """
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
 def main():
     """Основная логика работы бота."""
 
-    ...
+    # 1 Сделать запрос к API.
+    # 2 Проверить ответ.
+    # 3 Если есть обновления — получить статус работы из обновления и отправить сообщение в Telegram.
+    # 4 Подождать некоторое время и вернуться в пункт 1.
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
