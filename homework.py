@@ -1,7 +1,11 @@
 from dotenv import load_dotenv
-import telegram 
+import telegram
 import os
 import time
+import requests
+from pprint import pprint
+
+
 
 load_dotenv()
 
@@ -11,6 +15,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 RETRY_PERIOD = 600
+PAYLOAD = {'from_date': 7}
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -46,6 +51,9 @@ def get_api_answer(timestamp):
     В случае успешного запроса должна вернуть ответ API,
     приведя его из формата JSON к типам данных Python.
     """
+    homework_statuses = requests.get(ENDPOINT, headers=HEADERS, params=PAYLOAD)
+    pprint(homework_statuses.json())
+
 
 
 def check_response(response):
@@ -71,14 +79,16 @@ def parse_status(homework):
 def main():
     """Основная логика работы бота."""
 
-    # 1 Сделать запрос к API.
-    # 2 Проверить ответ.
-    # 3 Если есть обновления — получить статус работы из обновления и отправить сообщение в Telegram.
-    # 4 Подождать некоторое время и вернуться в пункт 1.
-
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
 
+    # 1 Сделать запрос к API.
+    get_api_answer(timestamp)
+
+    # 2 Проверить ответ.
+    
+    # 3 Если есть обновления — получить статус работы из обновления и отправить сообщение в Telegram.
+    # 4 Подождать некоторое время и вернуться в пункт 1.
     ...
 
     while True:
