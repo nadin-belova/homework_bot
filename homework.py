@@ -52,16 +52,40 @@ def get_api_answer(timestamp):
     приведя его из формата JSON к типам данных Python.
     """
     homework_statuses = requests.get(ENDPOINT, headers=HEADERS, params=PAYLOAD)
-    pprint(homework_statuses.json())
+    # pprint(homework_statuses.json())
+
+    return dict(homework_statuses.json())
 
 
 
 def check_response(response):
     """
-    проверяет ответ API на соответствие документации. 
-    В качестве параметра функция получает ответ API, 
+    проверяет ответ API на соответствие документации.
+    В качестве параметра функция получает ответ API,
     приведенный к типам данных Python.
     """
+    homeworks = response.get('homeworks')
+    homework_1 = homeworks[0] 
+    status = homework_1.get('status')
+    current_date = response.get('current_date')
+    
+
+    statuses = {
+        'reviewing': 'работа взята в ревью',
+        'approved': 'ревью успешно пройдено',
+        'rejected': 'в работе есть ошибки, нужно поправить'
+    }
+
+    if status in statuses:
+        print('работа в стадии:',status)
+    else:
+        print('error')
+
+    # print(status)
+
+    # # pprint(response.get('homeworks')[0].get('status'))
+
+
 
 
 def parse_status(homework):
@@ -83,10 +107,11 @@ def main():
     timestamp = int(time.time())
 
     # 1 Сделать запрос к API.
-    get_api_answer(timestamp)
+    response = get_api_answer(timestamp)
 
     # 2 Проверить ответ.
-    
+    check_response(response)
+
     # 3 Если есть обновления — получить статус работы из обновления и отправить сообщение в Telegram.
     # 4 Подождать некоторое время и вернуться в пункт 1.
     ...
