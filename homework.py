@@ -15,7 +15,7 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 RETRY_PERIOD = 600
-PAYLOAD = {'from_date': 7}
+PAYLOAD = {'from_date': 1}
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -42,7 +42,7 @@ def send_message(bot, message):
     определяемый переменной окружения TELEGRAM_CHAT_ID. 
     Принимает на вход два параметра: экземпляр класса Bot и строку с текстом сообщения.
     """
-
+    bot.send_message(TELEGRAM_CHAT_ID, message) 
 
 def get_api_answer(timestamp):
     """
@@ -81,9 +81,9 @@ def check_response(response):
     else:
         print('error')
 
-    # print(status)
+    pprint(homeworks)
 
-    # # pprint(response.get('homeworks')[0].get('status'))
+    # pprint(response.get('homeworks')[0].get('status'))
 
 
 
@@ -97,6 +97,8 @@ def parse_status(homework):
     для отправки в Telegram строку, содержащую один из 
     вердиктов словаря HOMEWORK_VERDICTS.
     """
+
+
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
@@ -112,7 +114,20 @@ def main():
     # 2 Проверить ответ.
     check_response(response)
 
-    # 3 Если есть обновления — получить статус работы из обновления и отправить сообщение в Telegram.
+    # 3 Если есть обновления — получить статус работы из обновления
+    # и отправить сообщение в Telegram. 
+    homeworks = response.get('homeworks')
+
+    if homeworks != []:
+        homework_1 = homeworks[0] 
+        status = homework_1.get('status')
+        print('есть обновление')
+        print(status)
+        send_message(bot = bot, message='есть обновление '+status)
+    else:
+        print(' нет обновлений')
+
+    
     # 4 Подождать некоторое время и вернуться в пункт 1.
     ...
 
