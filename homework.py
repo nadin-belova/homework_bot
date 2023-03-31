@@ -6,7 +6,6 @@ import requests
 from pprint import pprint
 
 
-
 load_dotenv()
 
 
@@ -28,25 +27,26 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-    """
-    Проверяет доступность переменных окружения,
-    которые необходимы для работы программы. 
-    Если отсутствует хотя бы одна переменная окружения — 
+    """Проверяет доступность переменных окружения.
+    Они необходимы для работы программы.
+    Если отсутствует хотя бы одна переменная окружения —
     продолжать работу бота нет смысла.
     """
+    if not all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
+        raise ValueError('Неверно заданы переменные окружения')
 
 
 def send_message(bot, message):
+    """Отправляет сообщение в Telegram чат.
+    Чат определяется переменной окружения TELEGRAM_CHAT_ID.
+    Принимает на вход два параметра: экземпляр класса
+    Bot и строку с текстом сообщения.
     """
-    Отправляет сообщение в Telegram чат,
-    определяемый переменной окружения TELEGRAM_CHAT_ID. 
-    Принимает на вход два параметра: экземпляр класса Bot и строку с текстом сообщения.
-    """
-    bot.send_message(TELEGRAM_CHAT_ID, message) 
+    bot.send_message(TELEGRAM_CHAT_ID, message)
+
 
 def get_api_answer(timestamp):
-    """
-    Делает запрос к единственному эндпоинту API-сервиса. 
+    """Делает запрос к единственному эндпоинту API-сервиса.
     В качестве параметра в функцию передается временная метка.
     В случае успешного запроса должна вернуть ответ API,
     приведя его из формата JSON к типам данных Python.
@@ -57,19 +57,15 @@ def get_api_answer(timestamp):
     return dict(homework_statuses.json())
 
 
-
 def check_response(response):
-    """
-    проверяет ответ API на соответствие документации.
+    """проверяет ответ API на соответствие документации.
     В качестве параметра функция получает ответ API,
     приведенный к типам данных Python.
     """
     homeworks = response.get('homeworks')
-    homework_1 = homeworks[0] 
+    homework_1 = homeworks[0]
     status = homework_1.get('status')
-    current_date = response.get('current_date')
-    
-
+    # current_date = response.get('current_date')
     statuses = {
         'reviewing': 'работа взята в ревью',
         'approved': 'ревью успешно пройдено',
@@ -77,7 +73,7 @@ def check_response(response):
     }
 
     if status in statuses:
-        print('работа в стадии:',status)
+        print('работа в стадии:', status)
     else:
         print('error')
 
@@ -86,60 +82,87 @@ def check_response(response):
     # pprint(response.get('homeworks')[0].get('status'))
 
 
-
-
 def parse_status(homework):
-    """
-    извлекает из информации о конкретной домашней 
-    работе статус этой работы. В качестве параметра функция 
-    получает только один элемент из списка домашних работ. 
-    В случае успеха, функция возвращает подготовленную 
-    для отправки в Telegram строку, содержащую один из 
+    """Извлекает статус домашней работы.
+    В качестве параметра функция
+    получает только один элемент из списка домашних работ.
+    В случае успеха, функция возвращает подготовленную
+    для отправки в Telegram строку, содержащую один из
     вердиктов словаря HOMEWORK_VERDICTS.
     """
-
-
+    homework_name = homework['homework_name']
+    status = homework['status']
+    verdict = HOMEWORK_VERDICTS.get(status, 'Статус не распознан')
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
+
+
+# def main():
+#     """Основная логика работы бота."""
+#     bot = telegram.Bot(token=TELEGRAM_TOKEN)
+#     timestamp = int(time.time())
+
+#     # 1 Сделать запрос к API.
+#     response = get_api_answer(timestamp)
+
+#     # 2 Проверить ответ.
+#     check_response(response)
+
+#     # 3 Если есть обновления — получить статус работы из обновления
+#     # и отправить сообщение в Telegram.
+#     homeworks = response.get('homeworks')
+
+#     if homeworks != []:
+#         homework_1 = homeworks[0]
+#         status = homework_1.get('status')
+#         print('есть обновление')
+#         print(status)
+#         send_message(bot=bot, message='есть обновление ' + status)
+#     else:
+#         print(' нет обновлений')
+#     # 4 Подождать некоторое время и вернуться в пункт 1.
+#     ...
+
+#     while True:
+#         try:
+
+#             ...
+
+#         except Exception as error:
+#            message = f'Сбой в работе программы: {error}'
+#             ...
+#         ...
 
 
 def main():
     """Основная логика работы бота."""
-
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
 
-    # 1 Сделать запрос к API.
-    response = get_api_answer(timestamp)
-
-    # 2 Проверить ответ.
-    check_response(response)
-
-    # 3 Если есть обновления — получить статус работы из обновления
-    # и отправить сообщение в Telegram. 
-    homeworks = response.get('homeworks')
-
-    if homeworks != []:
-        homework_1 = homeworks[0] 
-        status = homework_1.get('status')
-        print('есть обновление')
-        print(status)
-        send_message(bot = bot, message='есть обновление '+status)
-    else:
-        print(' нет обновлений')
-
-    
-    # 4 Подождать некоторое время и вернуться в пункт 1.
-    ...
-
     while True:
         try:
+            # 1 Сделать запрос к API.
+            response = get_api_answer(timestamp)
 
-            ...
+            # 2 Проверить ответ.
+            check_response(response)
+
+            # 3 Если есть обновления — получить статус работы из обновления
+            # и отправить сообщение в Telegram.
+            homeworks = response.get('homeworks')
+
+            if homeworks:
+                homework_1 = homeworks[0]
+                status = homework_1.get('status')
+                message = f'Есть обновление: {status}'
+                send_message(bot=bot, message=message)
+
+            # 4 Подождать некоторое время и вернуться в пункт 1.
+            time.sleep(RETRY_PERIOD)
+            timestamp = int(time.time())
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            ...
-        ...
+            send_message(bot=bot, message=message)
 
 
 if __name__ == '__main__':
