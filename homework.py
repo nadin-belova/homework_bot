@@ -27,10 +27,6 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 
 
-TELEGRAM_CHAT_ID = '12345'
-logger = logging.getLogger(__name__)
-
-
 def check_tokens():
     """Проверяет доступность переменных окружения.
     Они необходимы для работы программы.
@@ -49,9 +45,13 @@ def send_message(bot, message):
     """
     logger.info(f"Начало отправки сообщения: {message}")
     try:
-        logger.debug(f"Сообщение отправлено: {message}")
+        bot_message = bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+        if not bot_message:
+            logger.debug(f"Сообщение отправлено: {message}")
     except telegram.TelegramError as e:
         logger.error(f"Ошибка отправки сообщения: {e}")
+        # обработка ошибки, например, повторная отправка сообщения
+        # или просто игнорирование
 
 
 def get_api_answer(current_timestamp):
@@ -91,8 +91,8 @@ def check_response(response):
         raise KeyError('Ключ "current_date" отсутствует в словаре')
     homeworks_response = response['homeworks']
     if not isinstance(homeworks_response, list):
-        raise TypeError(
-            "Неверный тип значения по ключу 'homeworks': ожидается список")
+        raise TypeError("Неверный тип значения по ключу 'homeworks': "
+                        "ожидается список")
     logger.info("Список домашних работ получен")
     return homeworks_response
 
@@ -107,13 +107,16 @@ def parse_status(homework):
     """
     homework_name = homework.get("homework_name")
     homework_status = homework.get("status")
-    if homework_status not in HOMEWORK_VERDICTS:
-        message_verdict = "Такого статуса нет в словаре HOMEWORK_VERDICTS"
-        raise KeyError(message_verdict)
-    verdict = HOMEWORK_VERDICTS[homework_status]
     if "homework_name" not in homework:
         message_homework_name = "Такого имени не существует"
         raise KeyError(message_homework_name)
+    if homework_status not in HOMEWORK_VERDICTS:
+        message_homework_status = "Такого статуса не существует"
+        raise KeyError(message_homework_status)
+    verdict = HOMEWORK_VERDICTS[homework_status]
+    if not verdict:
+        message_verdict = "Такого статуса нет в словаре"
+        raise ValueError(message_verdict)
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
@@ -132,13 +135,15 @@ def main():
             homework = check_response(response)[0]
             if homework:
                 message = parse_status(homework)
-                current_report[response.get(
-                    "homework_name")] = response.get("status")
+                homework_name = response.get("homework_name")
+                status = response.get("status")
+                current_report[homework_name] = status
                 if current_report != prev_report:
                     send_message(bot, message)
                     prev_report = current_report.copy()
-                    current_report[response.get(
-                        "homework_name")] = response.get("status")
+                    homework_name = response.get("homework_name")
+                    status = response.get("status")
+                    current_report[homework_name] = status
             current_timestamp = response.get("current_date")
 
         except Exception as error:
