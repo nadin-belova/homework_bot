@@ -19,7 +19,7 @@ def current_timestamp():
 
 @pytest.fixture
 def homework_module():
-    import homework
+    import homework as homework
     return homework
 
 
