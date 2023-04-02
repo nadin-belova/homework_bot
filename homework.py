@@ -70,6 +70,8 @@ def get_api_answer(current_timestamp):
         homework_statuses = requests.get(**params)
     except Exception as error:
         logger.error(f"Ошибка при запросе к API: {error}")
+        logger.error(f"Параметры запроса: {params}")
+        logger.error(f"Ответ API: {homework_statuses.text}")
     else:
         if homework_statuses.status_code != HTTPStatus.OK:
             error_message = "Статус страницы не равен 200"
