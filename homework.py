@@ -1,3 +1,4 @@
+
 import logging
 import os
 import sys
@@ -21,6 +22,11 @@ HOMEWORK_VERDICTS = {
     "approved": "Работа проверена: ревьюеру всё понравилось. Ура!",
     "reviewing": "Работа взята на проверку ревьюером.",
     "rejected": "Работа проверена: у ревьюера есть замечания.",
+}
+
+CORRECT_HOMEWORK_KEYS = {
+    'homework_name',
+    'status'
 }
 
 logger = logging.getLogger(__name__)
@@ -71,7 +77,7 @@ def get_api_answer(current_timestamp):
     except Exception as error:
         logger.error(f"Ошибка при запросе к API: {error}")
         logger.error(f"Параметры запроса: {params}")
-        logger.error(f"Ответ API: {homework_statuses.text}")
+        # logger.error(f"Ответ API: {homework_statuses.text}")
     else:
         if homework_statuses.status_code != HTTPStatus.OK:
             error_message = "Статус страницы не равен 200"
@@ -87,10 +93,13 @@ def check_response(response):
     logger.info("Ответ от сервера получен")
     if not isinstance(response, dict):
         raise TypeError("Неверный тип входящих данных: ожидается словарь")
-    if 'homeworks' not in response:
-        raise KeyError('Ключ "homeworks" отсутствует в словаре')
-    if 'current_date' not in response:
-        raise KeyError('Ключ "current_date" отсутствует в словаре')
+
+    missed_keys = {'homeworks', 'current_date'} - response.keys()
+    if missed_keys:
+        error_text = f'В ответе API нет ожидаемых ключей: {missed_keys}'
+        logger.error(error_text)
+        raise KeyError(error_text)
+
     homeworks_response = response['homeworks']
     if not isinstance(homeworks_response, list):
         raise TypeError("Неверный тип значения по ключу 'homeworks': "
@@ -109,16 +118,30 @@ def parse_status(homework):
     """
     homework_name = homework.get("homework_name")
     homework_status = homework.get("status")
-    if "homework_name" not in homework:
-        message_homework_name = "Такого имени не существует"
-        raise KeyError(message_homework_name)
+
+    # if "homework_name" not in homework:
+    #     message_homework_name = "Такого имени не существует"
+    #     raise KeyError(message_homework_name)
+
+    missed_keys = CORRECT_HOMEWORK_KEYS - homework.keys()
+    if missed_keys:
+        error_text = (
+            f'В словаре с домашней работой нет ожидаемых ключей: {missed_keys}'
+        )
+
+        logger.error(error_text)
+        raise KeyError(error_text)
+
     if homework_status not in HOMEWORK_VERDICTS:
         message_homework_status = "Такого статуса не существует"
         raise KeyError(message_homework_status)
+
     verdict = HOMEWORK_VERDICTS[homework_status]
+
     if not verdict:
         message_verdict = "Такого статуса нет в словаре"
         raise ValueError(message_verdict)
+
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
